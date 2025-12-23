@@ -99,6 +99,57 @@ export class Trade {
   }
 
   /**
+   * Reconstitute Trade from persistence
+   */
+  static reconstitute(
+    id: TradeId,
+    userId: string,
+    pair: CurrencyPair,
+    direction: TradeDirection,
+    entryPrice: Price,
+    exitPrice: Price | null,
+    lotSize: LotSize,
+    stopLoss: Price | null,
+    takeProfit: Price | null,
+    pips: Pips | null,
+    points: Pips | null,
+    profitLoss: ProfitLoss | null,
+    riskAmount: number,
+    riskRewardRatio: number | null,
+    status: TradeStatus,
+    entryTime: Date,
+    exitTime: Date | null,
+    notes: string | null,
+    createdAt: Date,
+    updatedAt: Date
+  ): Trade {
+    const trade = new Trade(
+      id,
+      userId,
+      pair,
+      direction,
+      entryPrice,
+      lotSize,
+      riskAmount,
+      entryTime,
+      stopLoss,
+      takeProfit,
+      notes
+    );
+    // Set private fields using type assertion to access private members
+    (trade as any)._exitPrice = exitPrice;
+    (trade as any)._pips = pips;
+    (trade as any)._points = points;
+    (trade as any)._profitLoss = profitLoss;
+    (trade as any)._riskRewardRatio = riskRewardRatio;
+    (trade as any)._status = status;
+    (trade as any)._exitTime = exitTime;
+    (trade as any)._createdAt = createdAt;
+    (trade as any)._updatedAt = updatedAt;
+    return trade;
+  }
+
+  /**
    * Close the trade with exit price
    */
   close(exitPrice: Price, exitTime: Date = new Date()): void {

@@ -1,0 +1,85 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id           String   @id
+  email        String   @unique
+  passwordHash String   @map("password_hash")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  profile UserProfile?
+  trades  Trade[]
+
+  @@map("users")
+}
+
+model UserProfile {
+  userId      String   @id @map("user_id")
+  firstName   String?  @map("first_name")
+  lastName    String?  @map("last_name")
+  displayName String?  @map("display_name")
+  avatar      String?
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("user_profiles")
+}
+
+model Trade {
+  id              String         @id
+  userId          String         @map("user_id")
+  pair            String
+  direction       TradeDirection
+  entryPrice      Decimal        @map("entry_price") @db.Decimal(20, 8)
+  exitPrice       Decimal?       @map("exit_price") @db.Decimal(20, 8)
+  lotSize         Decimal        @map("lot_size") @db.Decimal(10, 2)
+  stopLoss        Decimal?       @map("stop_loss") @db.Decimal(20, 8)
+  takeProfit      Decimal?       @map("take_profit") @db.Decimal(20, 8)
+  pips            Decimal?       @db.Decimal(10, 2)
+  points          Decimal?       @db.Decimal(10, 2)
+  profitLoss      Decimal?       @map("profit_loss") @db.Decimal(20, 8)
+  riskAmount      Decimal        @map("risk_amount") @db.Decimal(20, 8)
+  riskRewardRatio Decimal?       @map("risk_reward_ratio") @db.Decimal(10, 4)
+  status          TradeStatus
+  entryTime       DateTime       @map("entry_time")
+  exitTime        DateTime?      @map("exit_time")
+  notes           String?
+  createdAt       DateTime       @default(now()) @map("created_at")
+  updatedAt       DateTime       @updatedAt @map("updated_at")
+
+  // Relations
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Indexes
+  @@index([userId])
+  @@index([entryTime])
+  @@index([pair])
+  @@index([status])
+  @@index([userId, status])
+  @@map("trades")
+}
+
+enum TradeDirection {
+  BUY
+  SELL
+}
+
+enum TradeStatus {
+  OPEN
+  WIN
+  LOSS
+  BREAK_EVEN
+}

@@ -122,8 +122,8 @@ export async function initializeDatabase(): Promise<void> {
 
     console.log("✅ Migrations table ready");
 
-    // Load and run initial migration
-    const migrationFiles = ["001_initial_schema.sql"];
+    // Load and run migrations
+    const migrationFiles = ["001_initial_schema.sql", "002_add_user_profiles.sql"];
 
     for (const filename of migrationFiles) {
       // Check if migration already executed

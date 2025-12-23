@@ -18,6 +18,7 @@ interface EnvConfig {
   AUTO_INIT_DB?: string;
   LOG_LEVEL?: string;
   CORS_ORIGINS?: string;
+  JWT_SECRET?: string;
 }
 
 /**
@@ -54,6 +55,7 @@ function validateEnv(): EnvConfig {
     AUTO_INIT_DB: process.env.AUTO_INIT_DB,
     LOG_LEVEL: process.env.LOG_LEVEL,
     CORS_ORIGINS: process.env.CORS_ORIGINS,
+    JWT_SECRET: process.env.JWT_SECRET,
   };
 }
 
