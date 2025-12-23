@@ -1,5 +1,18 @@
 import { serve } from "bun";
 import index from "./index.html";
+import { initializeDatabase } from "./infrastructure/persistence/database";
+import { env } from "./config/env";
+
+// Initialize database on startup
+if (env.AUTO_INIT_DB !== "false") {
+  try {
+    await initializeDatabase();
+  } catch (error) {
+    console.error("❌ Failed to initialize database:", error);
+    console.error("Please check your DATABASE_URL in .env file");
+    process.exit(1);
+  }
+}
 
 const server = serve({
   routes: {

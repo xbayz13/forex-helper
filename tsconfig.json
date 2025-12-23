@@ -21,16 +21,23 @@
     "noUncheckedIndexedAccess": true,
     "noImplicitOverride": true,
 
+    // DDD best practices - enable stricter checks
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "exactOptionalPropertyTypes": true,
+    "noImplicitReturns": true,
+
     "baseUrl": ".",
     "paths": {
-      "@/*": ["./src/*"]
-    },
-
-    // Some stricter flags (disabled by default)
-    "noUnusedLocals": false,
-    "noUnusedParameters": false,
-    "noPropertyAccessFromIndexSignature": false
+      "@/*": ["./src/*"],
+      "@/domain/*": ["./src/domain/*"],
+      "@/application/*": ["./src/application/*"],
+      "@/infrastructure/*": ["./src/infrastructure/*"],
+      "@/presentation/*": ["./src/presentation/*"],
+      "@/shared/*": ["./src/shared/*"]
+    }
   },
 
-  "exclude": ["dist", "node_modules"]
+  "include": ["src/**/*"],
+  "exclude": ["dist", "node_modules", "**/*.test.ts", "**/*.test.tsx"]
 }
