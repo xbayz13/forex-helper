@@ -11,6 +11,7 @@ import { createAuthRoutes } from "./routes/authRoutes";
 import { createLotCalculatorRoutes } from "./routes/lotCalculatorRoutes";
 import { createTradeHistoryRoutes } from "./routes/tradeHistoryRoutes";
 import { createReportsRoutes } from "./routes/reportsRoutes";
+import { createDocsRoutes } from "./routes/docsRoutes";
 import { JwtService } from "@/infrastructure/authentication/JwtService";
 
 export interface AppDependencies {
@@ -36,6 +37,7 @@ export function createApiRoutes(dependencies: AppDependencies) {
     ...createLotCalculatorRoutes(lotCalculatorController, jwtService),
     ...createTradeHistoryRoutes(tradeHistoryController, jwtService),
     ...createReportsRoutes(reportsController, jwtService),
+    ...createDocsRoutes(),
   };
 
   return routes;
