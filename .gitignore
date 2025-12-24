@@ -37,6 +37,5 @@ report.[0-9]_.[0-9]_.[0-9]_.[0-9]_.json
 #docs (except api documentation)
 docs/*
 !docs/api/
-!docs/ANALYSIS.md
 .cursor
 /generated/prisma

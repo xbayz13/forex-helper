@@ -5,14 +5,18 @@
  * It is included in `src/index.html`.
  */
 
+import "./index.css";
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import { App } from "./App";
+import { ThemeProvider } from "./components/ui/theme-provider";
 
 const elem = document.getElementById("root")!;
 const app = (
   <StrictMode>
-    <App />
+    <ThemeProvider defaultTheme="system" storageKey="forex-helper-theme">
+      <App />
+    </ThemeProvider>
   </StrictMode>
 );
 
