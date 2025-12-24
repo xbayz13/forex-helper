@@ -5,14 +5,17 @@
 
 import { readFileSync } from "fs";
 import { join } from "path";
+import { readdirSync } from "fs";
 
-const swaggerUiHtml = `
+// Generate Swagger UI HTML with proper Swagger UI integration
+function generateSwaggerUiHtml(): string {
+  return `
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <title>Forex Trading Helper API Documentation</title>
-  <link rel="stylesheet" type="text/css" href="https://unpkg.com/swagger-ui-dist@5.9.0/swagger-ui.css" />
+  <link rel="stylesheet" type="text/css" href="https://unpkg.com/swagger-ui-dist@5.17.14/swagger-ui.css" />
   <style>
     html {
       box-sizing: border-box;
@@ -30,8 +33,8 @@ const swaggerUiHtml = `
 </head>
 <body>
   <div id="swagger-ui"></div>
-  <script src="https://unpkg.com/swagger-ui-dist@5.9.0/swagger-ui-bundle.js"></script>
-  <script src="https://unpkg.com/swagger-ui-dist@5.9.0/swagger-ui-standalone-preset.js"></script>
+  <script src="https://unpkg.com/swagger-ui-dist@5.17.14/swagger-ui-bundle.js" charset="UTF-8"></script>
+  <script src="https://unpkg.com/swagger-ui-dist@5.17.14/swagger-ui-standalone-preset.js" charset="UTF-8"></script>
   <script>
     window.onload = function() {
       const ui = SwaggerUIBundle({
@@ -45,21 +48,23 @@ const swaggerUiHtml = `
         plugins: [
           SwaggerUIBundle.plugins.DownloadUrl
         ],
-        layout: "StandaloneLayout"
+        layout: "StandaloneLayout",
+        validatorUrl: null
       });
     };
   </script>
 </body>
 </html>
 `;
+}
 
 export function createDocsRoutes() {
   return {
     "/api/docs": {
       GET: () => {
-        return new Response(swaggerUiHtml, {
+        return new Response(generateSwaggerUiHtml(), {
           headers: {
-            "Content-Type": "text/html",
+            "Content-Type": "text/html; charset=utf-8",
           },
         });
       },
