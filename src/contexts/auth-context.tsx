@@ -62,7 +62,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       if (response.ok) {
         const data = await response.json();
-        setUser(data.user);
+        // Ensure user object has all required fields
+        const userData = data.user || data;
+        setUser({
+          id: userData.id,
+          email: userData.email,
+          username: userData.username || userData.email?.split("@")[0] || "User",
+          createdAt: userData.createdAt ? new Date(userData.createdAt) : new Date(),
+          updatedAt: userData.updatedAt ? new Date(userData.updatedAt) : new Date(),
+        });
       } else {
         // Token invalid, clear it
         localStorage.removeItem("token");
@@ -89,13 +97,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     });
 
     if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.error || "Login failed");
+      const errorData = await response.json().catch(() => ({ error: { message: "Login failed" } }));
+      // Backend returns { error: { message: "...", code: "..." } }
+      const errorMessage = errorData.error?.message || errorData.error || errorData.message || "Login failed";
+      throw new Error(errorMessage);
     }
 
     const data = await response.json();
     setToken(data.token);
-    setUser(data.user);
+    // Ensure user object has all required fields
+    const userData = data.user || data;
+    setUser({
+      id: userData.id,
+      email: userData.email,
+      username: userData.username || userData.email?.split("@")[0] || "User",
+      createdAt: userData.createdAt ? new Date(userData.createdAt) : new Date(),
+      updatedAt: userData.updatedAt ? new Date(userData.updatedAt) : new Date(),
+    });
     localStorage.setItem("token", data.token);
   };
 
@@ -109,13 +127,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     });
 
     if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.error || "Registration failed");
+      const errorData = await response.json().catch(() => ({ error: { message: "Registration failed" } }));
+      // Backend returns { error: { message: "...", code: "..." } }
+      const errorMessage = errorData.error?.message || errorData.error || errorData.message || "Registration failed";
+      throw new Error(errorMessage);
     }
 
     const data = await response.json();
     setToken(data.token);
-    setUser(data.user);
+    // Ensure user object has all required fields
+    const userData = data.user || data;
+    setUser({
+      id: userData.id,
+      email: userData.email,
+      username: userData.username || userData.email?.split("@")[0] || "User",
+      createdAt: userData.createdAt ? new Date(userData.createdAt) : new Date(),
+      updatedAt: userData.updatedAt ? new Date(userData.updatedAt) : new Date(),
+    });
     localStorage.setItem("token", data.token);
   };
 

@@ -55,16 +55,17 @@ interface Metrics {
 export function ReportsPage() {
   const [metrics, setMetrics] = useState<Metrics | null>(null);
 
-  const { execute, isLoading, error } = useApi<Metrics>({
+  const { execute, isLoading, error } = useApi<{ metrics: Metrics }>({
     showErrorToast: true,
   });
 
   const loadMetrics = async () => {
     try {
-      const data = await execute(() => api.get<Metrics>("/reports/metrics"));
-      setMetrics(data);
+      const data = await execute(() => api.get<{ metrics: Metrics }>("/reports/metrics"));
+      setMetrics(data.metrics);
     } catch (error) {
       // Error handled by useApi
+      setMetrics(null);
     }
   };
 
@@ -104,7 +105,7 @@ export function ReportsPage() {
         </div>
       ) : error ? (
         <ErrorMessage message={error} />
-      ) : metrics ? (
+      ) : metrics && metrics.totalTrades > 0 ? (
         <>
           {/* Key Metrics */}
           <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">

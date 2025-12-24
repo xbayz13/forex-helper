@@ -11,7 +11,11 @@ import { createRoot } from "react-dom/client";
 import { App } from "./App";
 import { ThemeProvider } from "./components/ui/theme-provider";
 
-const elem = document.getElementById("root")!;
+const elem = document.getElementById("root");
+if (!elem) {
+  throw new Error("Root element not found");
+}
+
 const app = (
   <StrictMode>
     <ThemeProvider defaultTheme="system" storageKey="forex-helper-theme">

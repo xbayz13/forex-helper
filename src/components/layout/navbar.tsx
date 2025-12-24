@@ -6,12 +6,12 @@ import { Separator } from "@/components/ui/separator";
 import { ThemeToggleButton } from "@/components/ui/theme-toggle";
 import { useAuth } from "@/contexts/auth-context";
 import {
-  LayoutDashboard,
   Calculator,
   History,
   FileText,
   Settings,
   LogOut,
+  LogIn,
   Menu,
   X,
 } from "lucide-react";
@@ -50,24 +50,22 @@ export function Navbar() {
 
   const navigation = [
     {
-      name: "Dashboard",
+      name: "Kalkulator",
       path: "/",
-      icon: LayoutDashboard,
-    },
-    {
-      name: "Lot Calculator",
-      path: "/lot-calculator",
       icon: Calculator,
+      public: true, // Public route, no login required
     },
     {
-      name: "Trade History",
-      path: "/trade-history",
+      name: "History",
+      path: "/history",
       icon: History,
+      public: false, // Requires login
     },
     {
       name: "Reports",
       path: "/reports",
       icon: FileText,
+      public: false, // Requires login
     },
   ];
 
@@ -81,9 +79,9 @@ export function Navbar() {
 
   const isActive = (path: string) => {
     if (path === "/") {
-      return location.pathname === "/";
+      return location.pathname === "/" || location.pathname === "/lot-calculator";
     }
-    return location.pathname.startsWith(path);
+    return location.pathname === path || location.pathname.startsWith(path + "/");
   };
 
   return (
@@ -102,20 +100,30 @@ export function Navbar() {
 
         {/* Desktop Navigation */}
         <div className="hidden md:flex items-center gap-1">
-          {navigation.map((item) => (
-            <Button
-              key={item.path}
-              variant={isActive(item.path) ? "default" : "ghost"}
-              onClick={() => {
+          {navigation.map((item) => {
+            // Show all navigation items, but handle protected routes
+            const handleClick = () => {
+              if (!item.public && !user) {
+                // Redirect to login if trying to access protected route
+                navigate("/login");
+              } else {
                 navigate(item.path);
-              }}
-              size="sm"
-              className="gap-2"
-            >
-              <item.icon className="h-4 w-4" />
-              <span>{item.name}</span>
-            </Button>
-          ))}
+              }
+            };
+
+            return (
+              <Button
+                key={item.path}
+                variant={isActive(item.path) ? "default" : "ghost"}
+                onClick={handleClick}
+                size="sm"
+                className="gap-2"
+              >
+                <item.icon className="h-4 w-4" />
+                <span>{item.name}</span>
+              </Button>
+            );
+          })}
 
           <Separator orientation="vertical" className="h-6 mx-2" />
 
@@ -138,7 +146,17 @@ export function Navbar() {
 
           <ThemeToggleButton />
 
-          {user && (
+          {!user ? (
+            <Button
+              variant="default"
+              size="sm"
+              onClick={() => navigate("/login")}
+              className="gap-2"
+            >
+              <LogIn className="h-4 w-4" />
+              <span>Login</span>
+            </Button>
+          ) : (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" className="relative h-10 w-10 rounded-full p-0">
@@ -169,7 +187,17 @@ export function Navbar() {
         {/* Mobile Navigation */}
         <div className="flex md:hidden items-center gap-2">
           <ThemeToggleButton />
-          {user && (
+          {!user ? (
+            <Button
+              variant="default"
+              size="sm"
+              onClick={() => navigate("/login")}
+              className="gap-2"
+            >
+              <LogIn className="h-4 w-4" />
+              <span className="hidden sm:inline">Login</span>
+            </Button>
+          ) : (
             <Avatar className="h-8 w-8 sm:h-9 sm:w-9 rounded-full">
               <AvatarFallback className="bg-primary/10 text-primary text-xs sm:text-sm rounded-full">
                 {getUserInitials()}
@@ -196,21 +224,29 @@ export function Navbar() {
       {mobileMenuOpen && (
         <div className="md:hidden border-t bg-background animate-in slide-in-from-top duration-200">
           <div className="container mx-auto px-3 sm:px-4 py-2 sm:py-3 space-y-1">
-            {navigation.map((item) => (
-              <Button
-                key={item.path}
-                variant={isActive(item.path) ? "default" : "ghost"}
-                onClick={() => {
+            {navigation.map((item) => {
+              const handleClick = () => {
+                if (!item.public && !user) {
+                  navigate("/login");
+                } else {
                   navigate(item.path);
-                  setMobileMenuOpen(false);
-                }}
-                className="w-full justify-start gap-2"
-                size="sm"
-              >
-                <item.icon className="h-4 w-4" />
-                {item.name}
-              </Button>
-            ))}
+                }
+                setMobileMenuOpen(false);
+              };
+
+              return (
+                <Button
+                  key={item.path}
+                  variant={isActive(item.path) ? "default" : "ghost"}
+                  onClick={handleClick}
+                  className="w-full justify-start gap-2"
+                  size="sm"
+                >
+                  <item.icon className="h-4 w-4" />
+                  {item.name}
+                </Button>
+              );
+            })}
             <Separator className="my-2" />
             {secondaryNavigation.map((item) => (
               <Button

@@ -1,5 +1,6 @@
 import { serve } from "bun";
-import index from "./index.html";
+import { join } from "path";
+import plugin from "bun-plugin-tailwind";
 import { initializeDatabase } from "./infrastructure/persistence/database";
 import { env } from "./config/env";
 import { createApiServerRoutes } from "./presentation/api/server";
@@ -86,20 +87,132 @@ const apiRouteHandler = createRouteHandler(apiRoutes);
 
 const server = serve({
   async fetch(req: Request) {
-    const url = new URL(req.url);
-    
-    // Handle API routes
-    if (url.pathname.startsWith("/api/")) {
-      const response = await apiRouteHandler(req);
-      if (response) {
-        return response;
+    try {
+      const url = new URL(req.url);
+      
+      // Handle API routes
+      if (url.pathname.startsWith("/api/")) {
+        const response = await apiRouteHandler(req);
+        if (response) {
+          return response;
+        }
+        // 404 for unmatched API routes
+        return Response.json({ error: "Not found" }, { status: 404 });
       }
-      // 404 for unmatched API routes
-      return Response.json({ error: "Not found" }, { status: 404 });
+      
+      // Serve static assets (JS, CSS, images, etc.)
+      const staticPath = url.pathname.slice(1); // Remove leading slash
+      if (staticPath && staticPath !== "index.html") {
+        const filePath = join(process.cwd(), "src", staticPath);
+        const file = Bun.file(filePath);
+        
+        if (await file.exists()) {
+          // Determine content type
+          const ext = staticPath.split('.').pop()?.toLowerCase();
+          const contentTypeMap: Record<string, string> = {
+            'js': 'application/javascript; charset=utf-8',
+            'ts': 'application/javascript; charset=utf-8', // Bun will transpile
+            'tsx': 'application/javascript; charset=utf-8', // Bun will transpile
+            'css': 'text/css; charset=utf-8',
+            'html': 'text/html; charset=utf-8',
+            'svg': 'image/svg+xml',
+            'png': 'image/png',
+            'jpg': 'image/jpeg',
+            'jpeg': 'image/jpeg',
+          };
+          
+          const contentType = contentTypeMap[ext || ''] || 'application/octet-stream';
+          
+          // For CSS files, process with Tailwind plugin
+          if (ext === 'css') {
+            try {
+              const result = await Bun.build({
+                entrypoints: [filePath],
+                target: 'browser',
+                format: 'esm',
+                minify: false,
+                plugins: [plugin],
+              });
+              
+              if (result.success && result.outputs.length > 0) {
+                const output = result.outputs[0];
+                const processedCss = await output.text();
+                
+                return new Response(processedCss, {
+                  headers: { 
+                    'Content-Type': contentType,
+                  },
+                });
+              } else {
+                throw new Error(result.logs.join('\n'));
+              }
+            } catch (error) {
+              console.error(`Error processing CSS ${staticPath}:`, error);
+              // Fallback to raw file if processing fails
+              return new Response(file, {
+                headers: { 
+                  'Content-Type': contentType,
+                },
+              });
+            }
+          }
+          
+          // For TypeScript/TSX files, we need to transpile them
+          if (ext === 'ts' || ext === 'tsx') {
+            try {
+              // Use Bun.build() to transpile the file
+              const result = await Bun.build({
+                entrypoints: [filePath],
+                target: 'browser',
+                format: 'esm',
+                minify: false,
+                sourcemap: 'inline',
+              });
+              
+              if (result.success && result.outputs.length > 0) {
+                const output = result.outputs[0];
+                const transpiledCode = await output.text();
+                
+                return new Response(transpiledCode, {
+                  headers: { 
+                    'Content-Type': contentType,
+                  },
+                });
+              } else {
+                throw new Error(result.logs.join('\n'));
+              }
+            } catch (error) {
+              console.error(`Error transpiling ${staticPath}:`, error);
+              return new Response(`Error transpiling file: ${error}`, { 
+                status: 500,
+                headers: { 'Content-Type': 'text/plain' },
+              });
+            }
+          }
+          
+          return new Response(file, {
+            headers: { 
+              'Content-Type': contentType,
+            },
+          });
+        }
+      }
+      
+      // For SPA routing, always serve index.html
+      const indexFile = Bun.file(join(process.cwd(), "src", "index.html"));
+      if (await indexFile.exists()) {
+        return new Response(indexFile, {
+          headers: { 
+            'Content-Type': 'text/html',
+          },
+        });
+      }
+      
+      return new Response("Not found", { status: 404 });
+    } catch (error) {
+      console.error("Error serving request:", error);
+      return new Response("Internal server error", { status: 500 });
     }
-    
-    // Serve index.html for all other routes (frontend)
-    return index;
   },
 
   development: process.env.NODE_ENV !== "production" && {

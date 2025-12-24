@@ -52,6 +52,26 @@ export function errorHandler(error: unknown): Response {
     );
   }
 
+  // Handle generic Error instances (from domain layer, etc.)
+  if (error instanceof Error) {
+    // Check if it's a domain validation error (password validation, etc.)
+    const isValidationError = 
+      error.message.includes("Password") ||
+      error.message.includes("Email") ||
+      error.message.includes("must contain") ||
+      error.message.includes("already registered");
+    
+    return Response.json(
+      {
+        error: {
+          message: error.message,
+          code: isValidationError ? "VALIDATION_ERROR" : "ERROR",
+        },
+      },
+      { status: isValidationError ? 400 : 500 }
+    );
+  }
+
   // Handle unknown errors
   return Response.json(
     {

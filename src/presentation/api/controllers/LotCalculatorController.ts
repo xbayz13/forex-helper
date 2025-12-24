@@ -20,12 +20,6 @@ export class LotCalculatorController {
   ) {}
 
   calculate = asyncHandler(async (req: Request): Promise<Response> => {
-    const user = (req as any).user;
-    
-    if (!user) {
-      throw new AppError(401, "Unauthorized", "UNAUTHORIZED");
-    }
-
     const body = await req.json();
 
     // Basic validation
@@ -49,6 +43,10 @@ export class LotCalculatorController {
       throw new AppError(400, "Currency pair is required", "VALIDATION_ERROR");
     }
 
+    // Note: userId is optional for public API - pass empty string if not authenticated
+    const user = (req as any).user;
+    const userId = user?.userId || "";
+
     const result = await this.calculateHandler.handle(
       {
         accountBalance: body.accountBalance,
@@ -59,7 +57,7 @@ export class LotCalculatorController {
         currencyPair: body.currencyPair,
         currentPrice: body.currentPrice,
       },
-      user.userId
+      userId
     );
 
     return Response.json(result);

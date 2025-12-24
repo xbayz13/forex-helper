@@ -12,6 +12,7 @@ import {
 import { GetUserProfileQueryHandler } from "@/application/user/queries";
 import { JwtService } from "@/infrastructure/authentication/JwtService";
 import { asyncHandler, AppError } from "../middleware";
+import { prisma } from "@/infrastructure/persistence/database/prisma";
 
 export class AuthController {
   constructor(
@@ -49,6 +50,9 @@ export class AuthController {
       user: {
         id: user.id,
         email: user.email,
+        username: user.email.split("@")[0], // Use email prefix as username
+        createdAt: user.createdAt,
+        updatedAt: user.updatedAt,
       },
       token,
     });
@@ -80,6 +84,9 @@ export class AuthController {
       user: {
         id: user.id,
         email: user.email,
+        username: user.email.split("@")[0], // Use email prefix as username
+        createdAt: user.createdAt,
+        updatedAt: user.updatedAt,
       },
       token,
     });
@@ -93,17 +100,39 @@ export class AuthController {
       throw new AppError(401, "Unauthorized", "UNAUTHORIZED");
     }
 
-    const profile = await this.getUserProfileHandler.handle({
-      userId: user.userId,
-    });
+    try {
+      // Get user from database
+      const dbUser = await prisma.user.findUnique({
+        where: { id: user.userId },
+      });
 
-    return Response.json({
-      user: {
-        id: user.userId,
-        email: user.email,
-        profile: profile || null,
-      },
-    });
+      if (!dbUser) {
+        throw new AppError(404, "User not found", "NOT_FOUND");
+      }
+
+      // Get profile if exists
+      let profile = null;
+      try {
+        profile = await this.getUserProfileHandler.handle({
+          userId: user.userId,
+        });
+      } catch (error) {
+        // Profile doesn't exist, that's okay
+      }
+
+      return Response.json({
+        user: {
+          id: user.userId,
+          email: user.email,
+          username: profile?.displayName || profile?.fullName || user.email.split("@")[0],
+          createdAt: dbUser.createdAt.toISOString(),
+          updatedAt: dbUser.updatedAt.toISOString(),
+        },
+      });
+    } catch (error) {
+      console.error("Error in getMe:", error);
+      throw error;
+    }
   });
 
   updateProfile = asyncHandler(async (req: Request): Promise<Response> => {

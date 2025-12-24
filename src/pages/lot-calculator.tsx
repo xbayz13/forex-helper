@@ -17,6 +17,7 @@ import { ErrorMessage } from "@/components/ui/error-message";
 import { Calculator, TrendingUp, DollarSign, AlertTriangle } from "lucide-react";
 import { api } from "@/lib/api-client";
 import { useApi } from "@/lib/hooks/use-api";
+import { formatCurrencyPair } from "@/lib/utils";
 import { toast } from "sonner";
 
 // Form validation schema
@@ -100,10 +101,16 @@ export function LotCalculatorPage() {
   // Load currency pairs on mount
   useEffect(() => {
     api
-      .get<{ pairs: string[] }>("/lot-calculator/pairs")
+      .get<{ pairs: Array<{ pair: string; displayName: string; baseCurrency: string; quoteCurrency: string; type: string }> }>("/lot-calculator/pairs")
       .then((data) => {
-        if (data.pairs && data.pairs.length > 0) {
-          setCurrencyPairs(data.pairs);
+        if (data.pairs && Array.isArray(data.pairs) && data.pairs.length > 0) {
+          // Extract pair strings from DTO objects
+          const pairStrings = data.pairs
+            .map((p) => (typeof p === "string" ? p : p.pair))
+            .filter((p): p is string => typeof p === "string");
+          if (pairStrings.length > 0) {
+            setCurrencyPairs(pairStrings);
+          }
         }
       })
       .catch(() => {
@@ -229,7 +236,7 @@ export function LotCalculatorPage() {
                   <SelectContent>
                     {currencyPairs.map((pair) => (
                       <SelectItem key={pair} value={pair}>
-                        {pair}
+                        {formatCurrencyPair(pair)}
                       </SelectItem>
                     ))}
                   </SelectContent>

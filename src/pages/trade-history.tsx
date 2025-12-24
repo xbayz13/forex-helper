@@ -58,6 +58,7 @@ import {
 } from "lucide-react";
 import { api } from "@/lib/api-client";
 import { useApi } from "@/lib/hooks/use-api";
+import { formatCurrencyPair } from "@/lib/utils";
 import { toast } from "sonner";
 
 // Types
@@ -115,7 +116,7 @@ export function TradeHistoryPage() {
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [pairFilter, setPairFilter] = useState<string>("all");
 
-  const { execute, isLoading } = useApi<Trade[]>({
+  const { execute, isLoading, error } = useApi<{ trades: Trade[]; total: number; page: number; pageSize: number; totalPages: number }>({
     showErrorToast: true,
   });
 
@@ -140,11 +141,15 @@ export function TradeHistoryPage() {
   // Load trades
   const loadTrades = async () => {
     try {
-      const data = await execute(() => api.get<Trade[]>("/trades"));
-      setTrades(data);
-      setFilteredTrades(data);
+      const response = await execute(() => api.get<{ trades: Trade[]; total: number; page: number; pageSize: number; totalPages: number }>("/trades"));
+      // API returns { trades: [...], total, page, pageSize, totalPages }
+      const tradesData = response.trades || [];
+      setTrades(tradesData);
+      setFilteredTrades(tradesData);
     } catch (error) {
       // Error handled by useApi
+      setTrades([]);
+      setFilteredTrades([]);
     }
   };
 
@@ -263,7 +268,7 @@ export function TradeHistoryPage() {
     ];
     const rows = filteredTrades.map((trade) => [
       trade.id,
-      trade.pair,
+      formatCurrencyPair(trade.pair),
       trade.direction,
       trade.entryPrice,
       trade.exitPrice || "",
@@ -290,7 +295,7 @@ export function TradeHistoryPage() {
   };
 
   return (
-    <div className="space-y-6 animate-in fade-in duration-500">
+    <div className="space-y-6 animate-in fade-in duration-500 min-h-[calc(100vh-8rem)]">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div className="space-y-1">
@@ -361,7 +366,7 @@ export function TradeHistoryPage() {
                   <SelectItem value="all">All Pairs</SelectItem>
                   {CURRENCY_PAIRS.map((pair) => (
                     <SelectItem key={pair} value={pair}>
-                      {pair}
+                      {formatCurrencyPair(pair)}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -383,6 +388,11 @@ export function TradeHistoryPage() {
           {isLoading ? (
             <div className="flex items-center justify-center py-12">
               <Loading size="lg" text="Loading trades..." />
+            </div>
+          ) : error ? (
+            <div className="flex flex-col items-center justify-center py-12 text-center">
+              <History className="h-12 w-12 text-muted-foreground mb-4" />
+              <ErrorMessage message={error} />
             </div>
           ) : filteredTrades.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-12 text-center">
@@ -412,7 +422,7 @@ export function TradeHistoryPage() {
                 <TableBody>
                   {filteredTrades.map((trade) => (
                     <TableRow key={trade.id}>
-                      <TableCell className="font-medium">{trade.pair}</TableCell>
+                      <TableCell className="font-medium">{formatCurrencyPair(trade.pair)}</TableCell>
                       <TableCell>
                         <span
                           className={`inline-flex items-center gap-1 ${
@@ -514,7 +524,7 @@ export function TradeHistoryPage() {
                   <SelectContent>
                     {CURRENCY_PAIRS.map((pair) => (
                       <SelectItem key={pair} value={pair}>
-                        {pair}
+                        {formatCurrencyPair(pair)}
                       </SelectItem>
                     ))}
                   </SelectContent>

@@ -11,16 +11,17 @@ import { ProfitLoss } from "../../trade-history/value-objects/ProfitLoss";
 export class MetricsCalculator {
   /**
    * Calculate performance metrics from trades
+   * Returns empty metrics if no trades or no closed trades
    */
   calculate(trades: Trade[]): PerformanceMetrics {
     if (trades.length === 0) {
-      throw new Error("Cannot calculate metrics from empty trade list");
+      return this.createEmptyMetrics();
     }
 
     const closedTrades = trades.filter((t) => t.isClosed());
     
     if (closedTrades.length === 0) {
-      throw new Error("Cannot calculate metrics: no closed trades");
+      return this.createEmptyMetrics();
     }
 
     // Basic counts
@@ -252,6 +253,30 @@ export class MetricsCalculator {
     }
 
     return longest;
+  }
+
+  /**
+   * Create empty metrics for when there are no trades
+   */
+  private createEmptyMetrics(): PerformanceMetrics {
+    const currency = "USD";
+    return PerformanceMetrics.create(
+      0, // totalTrades
+      0, // winningTrades
+      0, // losingTrades
+      WinRate.create(0), // winRate
+      ProfitLoss.create(0, currency), // totalProfitLoss (0 is valid for create)
+      0, // averageWin
+      0, // averageLoss
+      ProfitFactor.create(0), // profitFactor
+      0, // expectancy
+      Drawdown.create(0, 0, currency), // maximumDrawdown
+      null, // averageRiskRewardRatio
+      null, // bestTrade
+      null, // worstTrade
+      0, // longestWinningStreak
+      0 // longestLosingStreak
+    );
   }
 }
 

@@ -90,8 +90,16 @@ export class ApiClient {
           statusCode: response.status,
         };
       }
+      // Backend returns { error: { message: "...", code: "..." } }
+      // Extract message from nested error object if it exists
+      const errorMessage = 
+        (error as any)?.error?.message || 
+        error.message || 
+        (error as any)?.error || 
+        error.error || 
+        "Request failed";
       throw new ApiClientError(
-        error.message || error.error || "Request failed",
+        errorMessage,
         error.statusCode || response.status,
         error
       );

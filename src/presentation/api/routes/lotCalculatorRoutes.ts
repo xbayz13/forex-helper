@@ -1,24 +1,19 @@
 /**
  * Lot Calculator Routes
  * Routes for lot calculator endpoints
+ * Note: All lot calculator routes are public (no authentication required)
  */
 
 import { LotCalculatorController } from "../controllers/LotCalculatorController";
-import { createAuthMiddleware } from "../middleware/authMiddleware";
 import { JwtService } from "@/infrastructure/authentication/JwtService";
 
 export function createLotCalculatorRoutes(
   controller: LotCalculatorController,
-  jwtService: JwtService
+  _jwtService: JwtService // Kept for API compatibility but not used (all routes are public)
 ) {
-  const authMiddleware = createAuthMiddleware(jwtService);
-
   return {
     "/api/lot-calculator/calculate": {
-      POST: async (req: Request) => {
-        const authenticatedReq = await authMiddleware(req);
-        return controller.calculate(authenticatedReq);
-      },
+      POST: controller.calculate,
     },
     "/api/lot-calculator/pairs": {
       GET: controller.getPairs,
