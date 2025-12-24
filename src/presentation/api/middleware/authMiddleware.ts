@@ -14,7 +14,7 @@ export interface AuthenticatedRequest extends Request {
 }
 
 export function createAuthMiddleware(jwtService: JwtService) {
-  return async (request: Request): Promise<AuthenticatedRequest> {
+  return async (request: Request): Promise<AuthenticatedRequest> => {
     const authHeader = request.headers.get("Authorization");
 
     if (!authHeader || !authHeader.startsWith("Bearer ")) {

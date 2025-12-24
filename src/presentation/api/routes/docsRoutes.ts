@@ -5,7 +5,6 @@
 
 import { readFileSync } from "fs";
 import { join } from "path";
-import { readdirSync } from "fs";
 
 // Generate Swagger UI HTML with proper Swagger UI integration
 function generateSwaggerUiHtml(): string {
